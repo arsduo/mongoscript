@@ -1,4 +1,4 @@
-require "mongoscript/orm/mongoid"
+require "mongoscript/orm/mongoid_adapter"
 require "mongoscript/version"
 
 module MongoScript
@@ -14,7 +14,7 @@ module MongoScript
   # @returns MongoScript::ORM::Mongoid if Mongoid is detected
   def self.orm_adapter
     if const_defined? "Mongoid"
-      MongoScript::ORM::Mongoid
+      MongoScript::ORM::MongoidAdapter
     else
       raise NoORMError, "Unable to locate Mongoid!"
     end

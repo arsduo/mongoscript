@@ -4,7 +4,7 @@ describe MongoScript do
   describe ".orm_adapter" do
     it "returns the Mongoid adapter if Mongoid is defined" do
       Object.stubs(:const_defined?).with("Mongoid").returns(true)
-      MongoScript.orm_adapter.should == MongoScript::ORM::Mongoid
+      MongoScript.orm_adapter.should == MongoScript::ORM::MongoidAdapter
     end
 
     it "raises a NoORMError if no Mongo ORM is available" do
