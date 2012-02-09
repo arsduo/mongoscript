@@ -18,6 +18,7 @@ group :development, :test do
   gem 'guard'
   gem 'guard-rspec'
   gem "parallel_tests"
+  gem "fuubar"
 
   if RUBY_PLATFORM =~ /darwin/
     # OS X integration
