@@ -4,8 +4,8 @@ require File.expand_path('../lib/mongoscript/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Alex Koppel"]
   gem.email         = ["alex+git@alexkoppel.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{An experimental Ruby library for running serverside Javascript in MongoDB.}
+  gem.summary       = %q{An experimental Ruby library for running serverside Javascript in MongoDB.}
   gem.homepage      = ""
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
