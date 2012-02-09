@@ -1,0 +1,3 @@
+module Mongoscript
+  VERSION = "0.0.1"
+end
