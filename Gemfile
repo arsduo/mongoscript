@@ -9,7 +9,8 @@ end
 
 group :development, :test do
   # ORM
-  gem 'mongoid', "~> 2.2"
+  gem "mongoid", "~> 2.2"
+  gem "bson_ext"
 
   # Testing infrastructure
   gem 'rspec'
