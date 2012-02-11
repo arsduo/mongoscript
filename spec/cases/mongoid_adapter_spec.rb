@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 describe MongoScript::ORM::MongoidAdapter do
-  class ObjectWithMongoidAdapter
+  module ObjectWithMongoidAdapter
     include MongoScript::ORM::MongoidAdapter
   end
 
   before :all do
-    @adapter = ObjectWithMongoidAdapter.new
+    @adapter = ObjectWithMongoidAdapter
   end
 
   describe "#database" do
