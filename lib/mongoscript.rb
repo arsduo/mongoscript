@@ -1,5 +1,6 @@
 require "mongoscript/orm/mongoid_adapter"
 require "mongoscript/version"
+require "mongoscript/execution"
 
 module MongoScript
   class NoORMError < StandardError; end
@@ -19,8 +20,7 @@ module MongoScript
       raise NoORMError, "Unable to locate Mongoid!"
     end
   end
-end
 
-# these are defined afterward since they depend on the ORM adapter
-# TODO: fix this
-require "mongoscript/execution"
+  include orm_adapter
+  include Execution
+end
