@@ -20,6 +20,9 @@ group :development, :test do
   gem "parallel_tests"
   gem "fuubar"
 
+  # testing bundled Javascripts
+  gem "therubyracer"
+
   if RUBY_PLATFORM =~ /darwin/
     # OS X integration
     gem "ruby_gntp"
