@@ -48,6 +48,26 @@ module MongoScript
           end
           result
         end
+
+        # Turn a Mongoid::Criteria into a hash useful for
+        def build_multiquery_criteria(criteria)
+          if criteria.is_a?(Mongoid::Criteria)
+            opts = critiera.options.dup
+            # make sure the sort options are in a Mongo-compatible format
+            opts[:sort] = Mongo::Support::array_as_sort_parameters(x.options[:sort] || [])
+            {
+              :selector => criteria.selector,
+              :collection => criteria.collection.name,
+              # fields are specified as a second parameter to the db[collection].find JS call
+              :fields => opts[:fields],
+              # everything in the options besides fields should be a modifier
+              # i.e. a function that can be applied via a method to a db[collection].find query
+              :modifiers => opts.tap { |o| o.delete(:fields) }
+            }
+          else
+            raise ArgumentError, "Invalid selector type provided to multiquery, expected hash or Mongoid::Criteria, got #{critiera.class}"
+          end
+        end
       end
     end
   end
