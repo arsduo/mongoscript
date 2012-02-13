@@ -21,7 +21,7 @@ group :development, :test do
   gem "fuubar"
 
   # testing bundled Javascripts
-  gem "therubyracer"
+  gem "jasmine"
 
   if RUBY_PLATFORM =~ /darwin/
     # OS X integration
