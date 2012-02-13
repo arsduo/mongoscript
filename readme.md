@@ -14,6 +14,6 @@ What's that you say?  You understand all that, you just want to hack some server
 
 ###The cool stuff###
 
-So what we can do with MongoDB and Javascript, at least in theory? A lot.
+##More readme coming soon!##
 
-* Mongo'
+So what we can do with MongoDB and Javascript, at least in theory? A lot.
