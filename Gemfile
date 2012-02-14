@@ -19,6 +19,7 @@ group :development, :test do
   gem 'guard-rspec'
   gem "parallel_tests"
   gem "fuubar"
+  gem "rake"
 
   # testing bundled Javascripts
   gem "jasmine"
