@@ -69,7 +69,7 @@ module MongoScript
             details[:collection] ||= name
           elsif processable_into_parameters?(details)
             # process Mongo ORM selectors into JS-compatible hashes
-            queries[name] = MongoScript.build_multiquery_parameters(details)
+            details = queries[name] = MongoScript.build_multiquery_parameters(details)
           else
             raise ArgumentError, "Invalid selector type provided to multiquery, expected hash or Mongoid::Criteria, got #{critiera.class}"
           end
