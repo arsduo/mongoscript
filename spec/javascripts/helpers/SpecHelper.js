@@ -4,13 +4,17 @@
 
 var MockMongo = function(dbName) {
   var Collection = function(name, data) {
-    return collection = {
+    // we have to declare this as a local var
+    // since we need to embed it into the find scope
+    var collection = {
       name: name,
       find: function(params, fields) {
-        return new Query(params, fields, collection);
+        this.findResult = this.findResult || new Query(params, fields, collection);
+        return this.findResult;
       },
       data: data || []
-    }
+    };
+    return collection;
   }
 
   var Query = function(params, fields, collection) {
@@ -18,16 +22,24 @@ var MockMongo = function(dbName) {
       params: params,
       fields: fields,
       collection: collection,
-      limit: function() {},
-      sort: function() {},
+      limit: function() { this.limitArgs = arguments; return this; },
+      sort: function() { this.sortArgs = arguments; return this; },
       toArray: function() {
         // always return the collection's data
         return collection.data;
+      },
+      map: function() {
+        var data = this.toArray();
+        return data.map.apply(data, arguments)
       }
     }
   }
 
   var prototype = {
+    toString: function() {
+      return this.name;
+    },
+
     addCollection: function(name, data) {
       if (!this[name]) {
         this[name] = new Collection(name, data);
