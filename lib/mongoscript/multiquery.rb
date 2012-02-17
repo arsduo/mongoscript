@@ -56,17 +56,31 @@ module MongoScript
         return {} if queries == {}
 
         # resolve all the
-        mapped_queries = normalize_queries(queries)
-        results = MongoScript.execute_readonly_routine("multiquery", mapped_queries)
-        process_results(results, mapped_queries)
+        queries = normalize_queries(queries)
+        results = MongoScript.execute_readonly_routine("multiquery", mongoize_queries(queries))
+        process_results(results, queries)
       end
 
+
+      # Standardize a set of queries into a form we can use.
+      # Specifically, ensure each query has a database collection
+      # and an ORM class, and resolve any ORM criteria into hashes.
+      #
+      # @param queries a set of query_name => hash_or_orm_criteria pairs
+      #
+      # @raises ArgumentError if we can't determine the DB collection or class,
+      #                       or if the input isn't understood
+      #
+      # @returns [Hash] a set of hashes that can be fed to mongoize_queries
+      #                 and later used for processing
       def normalize_queries(queries)
         # need to also ensure we have details[:klass}]
-        queries.dup.each_pair do |name, details|
+        queries = queries.dup
+        queries.each_pair do |name, details|
           if details.is_a?(Hash)
             # if no collection is specified, assume it's the same as the name
             details[:collection] ||= name
+            raise ArgumentError, "Unable to determine collection for query #{name}!" unless details[:collection]
           elsif processable_into_parameters?(details)
             # process Mongo ORM selectors into JS-compatible hashes
             details = queries[name] = MongoScript.build_multiquery_parameters(details)
@@ -81,6 +95,22 @@ module MongoScript
             raise ArgumentError, "Unable to determine class for query #{name}!" unless Object.const_defined?(expected_class_name)
             details[:klass] = Object.const_get(expected_class_name)
           end
+        end
+      end
+
+      # Prepare normalized queries for use in Mongo.
+      # Currently, this involves deleting parameters that can't be
+      # turned into BSON.
+      # (We can't act directly on the normalized queries,
+      # since they contain data used later to rehydrate models.)
+      #
+      # @param queries previously normalized queries
+      #
+      # @returns [Hash] a set of queries that can be passed to MongoScript#execute
+      def mongoize_queries(queries)
+        # delete any information not needed by/compatible with Mongoid execution
+        queries.dup.each_pair do |name, details|
+          details.delete(:klass)
         end
       end
 
