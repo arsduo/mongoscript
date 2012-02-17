@@ -25,8 +25,13 @@ module MongoScript
           attr_accessor :script_dirs
         end
 
+        def self.gem_path
+          mongoscript = Bundler.load.specs.find {|s| s.name == "mongoscript"}
+          File.join(mongoscript.full_gem_path, "lib", "mongoscript", "javascripts")
+        end
+
         # start out with the scripts provided by the gem
-        @script_dirs = [File.join(File.dirname(__FILE__), "javascripts")]
+        @script_dirs = [gem_path]
 
         extend MongoScript::Execution::ClassMethods
       end
