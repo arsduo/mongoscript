@@ -15,4 +15,10 @@ RSpec.configure do |config|
   end
 end
 
+
 SCRIPTS_PATH = File.join(File.dirname(__FILE__), "fixtures")
+
+# Integration testing
+# Mongoid requires a RAILS_ENV to be set
+ENV["RACK_ENV"] ||= "test"
+Mongoid.load!(File.join(File.dirname(__FILE__), "support", "mongoid.yml"))

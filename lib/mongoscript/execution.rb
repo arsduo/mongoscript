@@ -56,11 +56,6 @@ module MongoScript
         # code
       end
 
-      def default_script_dir
-        # default to using our provided Javascript
-        File.join(File.dirname(__FILE__), "javascripts")
-      end
-
       def execute_readonly_routine(script_name, *args)
         execute_readonly_code(code_for(script_name), *args)
       end
