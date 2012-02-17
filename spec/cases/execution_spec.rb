@@ -6,8 +6,12 @@ describe MongoScript::Execution do
     include MongoScript::Execution
   end
 
+  before :all do
+    @original_script_dirs = ObjectWithExecution.script_dirs
+  end
+
   before :each do
-    ObjectWithExecution.script_dir = SCRIPTS_PATH
+    ObjectWithExecution.script_dirs = @original_script_dirs
   end
 
   it "has a constant for LOADED_SCRIPTS" do
@@ -24,13 +28,24 @@ describe MongoScript::Execution do
 
   it "has a script_dir accessor" do
     stubby = stub("dir")
-    ObjectWithExecution.script_dir = stubby
-    ObjectWithExecution.script_dir.should == stubby
+    ObjectWithExecution.script_dirs = stubby
+    ObjectWithExecution.script_dirs.should == stubby
+  end
+
+  it "defaults to the built-in scripts" do
+    location_pieces = File.dirname(__FILE__).split("/")
+    # strip out /spec/cases to get back to the root directory
+    gem_path = location_pieces[0, location_pieces.length - 2].join("/")
+    ObjectWithExecution.script_dirs.should == [File.join(gem_path, "lib", "mongoscript", "javascripts")]
   end
 
   describe ".code_for" do
     before :all do
       @script_code = File.open(File.join(SCRIPTS_PATH, "sample_script.js")).read
+    end
+
+    before :each do
+      ObjectWithExecution.script_dirs = @original_script_dirs + [SCRIPTS_PATH]
     end
 
     it "loads and returns the code for a given file" do
@@ -47,20 +62,20 @@ describe MongoScript::Execution do
     end
 
     it "raises a ScriptNotFound error if the file doesn't exist" do
+      File.stubs(:exist?).returns(false)
       expect { ObjectWithExecution.code_for("i don't exist") }.to raise_exception(ObjectWithExecution::ScriptNotFound)
     end
 
-    it "will look in another directory if provided" do
-      my_path = "/foo/bar"
-      my_script = "foo"
-      File.stubs(:exists?).returns(true)
-      stubby = stub("script contents")
-      File.expects(:read).with(File.join(my_path, "#{my_script}.js")).returns(stubby)
-      ObjectWithExecution.code_for(my_script, my_path).should == stubby
-    end
+    it "will look in all the directories provided" do
+      dir = "/foo/bar"
+      my_script = "a script"
+      ObjectWithExecution.script_dirs << dir
+      File.stubs(:exists?).returns(*(ObjectWithExecution.script_dirs.map {|f| f == dir}))
 
-    it "raises a NoScriptDirectory error if no directory is provided" do
-      expect { ObjectWithExecution.code_for("sample_script", nil) }.to raise_exception(ObjectWithExecution::NoScriptDirectory)
+      # make sure that we try to load the script
+      stubby = stub("file contents")
+      File.expects(:read).with(File.join(dir, "#{my_script}.js")).returns(stubby)
+      ObjectWithExecution.code_for(my_script).should == stubby
     end
   end
 
