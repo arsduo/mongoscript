@@ -65,6 +65,7 @@ describe MongoScript::Multiquery do
 
   describe "#normalize_queries" do
     it "needs tests :("
+    it "doesn't change the underlying hash"
   end
 
   describe "#process_results" do
