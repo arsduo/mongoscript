@@ -47,20 +47,22 @@ module MongoScript
       #     # results get automatically turned into
       #     :cars => [#<Car: details>, #<Car: details>],
       #     :my_cool_query => [#<Book: details>],
-      #     :planes =>
+      #     :planes => #<QueryFailedError>
       #   }
       #
+      # @raises ArgumentError if the input isn't valid (see #normalize_queries) (see #validate_queries!)
       #
+      # @returns Hash a set of database results/errors for each query
       def multiquery(queries)
         # don't do anything if we don't get any queries
         return {} if queries == {}
 
         # resolve all the
         queries = normalize_queries(queries)
+        validate_queries!(queries)
         results = MongoScript.execute_readonly_routine("multiquery", mongoize_queries(queries))
         process_results(results, queries)
       end
-
 
       # Standardize a set of queries into a form we can use.
       # Specifically, ensure each query has a database collection
@@ -68,34 +70,64 @@ module MongoScript
       #
       # @param queries a set of query_name => hash_or_orm_criteria pairs
       #
-      # @raises ArgumentError if we can't determine the DB collection or class,
-      #                       or if the input isn't understood
+      # @raises ArgumentError if the query details can't be processed (aren't a hash or Mongoid::Criteria)
       #
       # @returns [Hash] a set of hashes that can be fed to mongoize_queries
       #                 and later used for processing
       def normalize_queries(queries)
-        # need to also ensure we have details[:klass}]
-        queries = queries.dup
-        queries.each_pair do |name, details|
+        # need to also ensure we have details[:klass]
+
+        queries.inject({}) |normalized_queries, data|
+          name, details = data
+
           if details.is_a?(Hash)
+            # duplicate the details so we don't make changes to the original query data
+            details = details.dup.with_indifferent_access
+
             # if no collection is specified, assume it's the same as the name
             details[:collection] ||= name
-            raise ArgumentError, "Unable to determine collection for query #{name}!" unless details[:collection]
+
+            # ensure that we know which class the collection maps to
+            # so we can rehydrate the resulting data
+            unless details[:klass]
+              expected_class_name = details[:collection].to_s.singularize.titlecase
+              # if the class doesn't exist, this'll be false (and we'll raise an error later)
+              details[:klass] = Object.const_defined?(expected_class_name) && Object.const_get(expected_class_name)
+            end
           elsif processable_into_parameters?(details)
             # process Mongo ORM selectors into JS-compatible hashes
-            details = queries[name] = MongoScript.build_multiquery_parameters(details)
+            details = MongoScript.build_multiquery_parameters(details).with_indifferent_access
           else
-            raise ArgumentError, "Invalid selector type provided to multiquery, expected hash or Mongoid::Criteria, got #{critiera.class}"
+            raise ArgumentError, "Invalid selector type provided to multiquery for #{name}, expected hash or Mongoid::Criteria, got #{critiera.class}"
           end
 
-          # ensure that we know which class the collection maps to
-          # so we can rehydrate the resulting data
-          unless details[:klass]
-            expected_class_name = details[:collection].to_s.singularize.titlecase
-            raise ArgumentError, "Unable to determine class for query #{name}!" unless Object.const_defined?(expected_class_name)
-            details[:klass] = Object.const_get(expected_class_name)
-          end
+          normalized_queries[name] = details
         end
+      end
+
+      # Validate that all the queries are well formed.
+      # We could do this when building them,
+      # but doing it afterward allows us to present a single, comprehensive error message
+      # (in case multiple queries have problems).
+      #
+      # @param queries a set of normalized queries
+      #
+      # @raises ArgumentError if any of the queries are missing Ruby class or database collection info
+      #
+      # @returns true if the queries are well-formatted
+      def validate_queries!(queries)
+        errors = {:collection => [], :klass => []}
+        queries.each_pair do |name, details|
+          errors[:collection] << name unless details[:collection]
+          errors[:klass] << name unless details[:klass]
+        end
+        error_text = ""
+        error_text += "Missing collection details: #{errors[:collection].join(", ")}." if errors[:collection].length > 0
+        error_text += "Missing Ruby class details: #{errors[:klass].join(", ")}." if errors[:klass].length > 0
+        if error_text.length > 0
+          raise ArgumentError, "Unable to execute multiquery. #{error_text}"
+        end
+        true
       end
 
       # Prepare normalized queries for use in Mongo.
@@ -109,8 +141,10 @@ module MongoScript
       # @returns [Hash] a set of queries that can be passed to MongoScript#execute
       def mongoize_queries(queries)
         # delete any information not needed by/compatible with Mongoid execution
-        queries.dup.each_pair do |name, details|
-          details.delete(:klass)
+        mongoized_queries = queries.dup
+        mongoized_queries.each_pair do |name, details|
+          # have to dup the query details to avoid changing the original hashes
+          mongoized_queries[name] = details.dup.delete(:klass)
         end
       end
 
