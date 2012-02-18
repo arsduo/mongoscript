@@ -14,4 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "mongoscript"
   gem.require_paths = ["lib"]
   gem.version       = Mongoscript::VERSION
+
+  # we use activesupport's with_indifferent_access
+  gem.add_runtime_dependency(%q<activesupport>, ["~> 3.0"])
 end
