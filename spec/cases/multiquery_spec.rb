@@ -7,8 +7,13 @@ describe MongoScript::Multiquery do
     include MongoScript::Multiquery
   end
 
-  class Car; include Mongoid::Document; end
-  class Dog; include Mongoid::Document; end
+  let(:results) {
+    {
+      :cars => 3.times.collect { Car.new.attributes },
+      :canines => 3.times.collect { Car.new.attributes }
+    }
+  }
+
   let(:queries) {
     {
       :cars => {:query => {:_id => {:"$in" => [1, 2, 3]}}},
@@ -16,11 +21,8 @@ describe MongoScript::Multiquery do
     }
   }
 
-  let(:results) {
-    {
-      :cars => [{"_id" => "abc"}, {"_id" => "def"}],
-      :canines => [{"_id" => "123"}, {"_id" => "456"}]
-    }
+  let(:normalized_queries) {
+    MongoScript.normalize_queries(queries)
   }
 
   it "defines QueryFailedError error < RuntimeError" do
@@ -42,9 +44,10 @@ describe MongoScript::Multiquery do
       MongoScript.multiquery(queries)
     end
 
-    it "normalizes the queries before passing them in" do
+    it "normalizes the queries before validating them and passing them in for execution" do
       normalized = stub("normalized queries")
       MongoScript.stubs(:normalize_queries).with(queries, anything).returns(normalized)
+      MongoScript.expects(:validate_queries!).with(normalized)
       MongoScript.expects(:execute_readonly_routine).with(anything, normalized).returns({})
       MongoScript.multiquery(queries)
     end
@@ -52,7 +55,7 @@ describe MongoScript::Multiquery do
     it "processes the results and returns them" do
       raw_results = stub("raw_results")
       MongoScript.stubs(:execute_readonly_routine).returns(raw_results)
-      MongoScript.expects(:process_results).with(raw_results, queries)
+      MongoScript.expects(:process_results).with(raw_results, normalized_queries)
       MongoScript.multiquery(queries)
     end
 
@@ -91,16 +94,34 @@ describe MongoScript::Multiquery do
       processed_results[:cars].each {|c| c.should be_a(Car)}
     end
 
-    it "turns any errors into QueryFailedErrors" do
-      results[:canines] = {"error" => "ssh mongo is sleeping!"}
-      normalized_queries = ObjectWithMultiquery.normalize_queries(queries)
-      processed_results = ObjectWithMultiquery.process_results(results, normalized_queries)
+    context "when a query errors" do
+      before :each do
+        results[:canines] = {"error" => "ssh mongo is sleeping!"}
+      end
 
-      error = processed_results[:canines]
-      error.should be_a(MongoScript::Multiquery::QueryFailedError)
-      error.query_parameters.should == queries[:canines]
-      error.query_name.to_s.should == "canines"
-      error.db_response.should == results[:canines]
+      let(:processed_results) {
+        ObjectWithMultiquery.process_results(results, normalized_queries)
+      }
+
+      let(:error) {
+        processed_results[:canines]
+      }
+
+      it "turns any errors into QueryFailedErrors" do
+        error.should be_a(MongoScript::Multiquery::QueryFailedError)
+      end
+
+      it "makes the normalized query available in the error" do
+        error.query_parameters.should == normalized_queries[:canines]
+      end
+
+      it "identifies the query name in the error" do
+        error.query_name.to_s.should == "canines"
+      end
+
+      it "makes the raw db response available in the error" do
+        error.db_response.should == results[:canines]
+      end
     end
   end
 end

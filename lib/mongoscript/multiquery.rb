@@ -76,8 +76,7 @@ module MongoScript
       #                 and later used for processing
       def normalize_queries(queries)
         # need to also ensure we have details[:klass]
-
-        queries.inject({}) |normalized_queries, data|
+        queries.inject({}) do |normalized_queries, data|
           name, details = data
 
           if details.is_a?(Hash)
@@ -102,6 +101,7 @@ module MongoScript
           end
 
           normalized_queries[name] = details
+          normalized_queries
         end
       end
 
@@ -159,7 +159,7 @@ module MongoScript
         results.each_pair do |name, response|
           processed_results[name] = if response.is_a?(Hash) && response["error"]
             QueryFailedError.new(name, queries[name], response)
-          else
+          elsif response
             # turn all the individual responses into real objects
             response.map {|data| MongoScript.rehydrate(queries[name][:klass], data)}
           end
