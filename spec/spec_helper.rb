@@ -15,6 +15,7 @@ RSpec.configure do |config|
   end
 end
 
+Dir[File.join(File.dirname(__FILE__), "support", "**", "*.rb")].each {|f| load f}
 
 SCRIPTS_PATH = File.join(File.dirname(__FILE__), "fixtures")
 

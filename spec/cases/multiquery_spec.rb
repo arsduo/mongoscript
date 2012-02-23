@@ -30,8 +30,20 @@ describe MongoScript::Multiquery do
   end
 
   describe "#multiquery" do
+    # here we just want to test the flow of the method
+    # further tests ensure that each individual call works as expected
+    # we also will have integration tests soon
+    let(:normalized_queries) { stub("normalized queries") }
+    let(:mongoized_queries)  { stub("mongoized queries") }
+    let(:raw_results)        { stub("raw results") }
+    let(:processed_results)  { stub("processed results") }
+
     before :each do
-      MongoScript.stubs(:execute_readonly_routine).returns({})
+      MongoScript.stubs(:normalize_queries).returns(normalized_queries)
+      MongoScript.stubs(:validate_queries!)
+      MongoScript.stubs(:mongoize_queries).returns(mongoized_queries)
+      MongoScript.stubs(:execute_readonly_routine).returns(raw_results)
+      MongoScript.stubs(:process_results).returns(raw_results)
     end
 
     it "returns {} without hitting the database if passed {}" do
@@ -39,30 +51,34 @@ describe MongoScript::Multiquery do
       MongoScript.multiquery({}).should == {}
     end
 
-    it "executes the multiquery routine" do
-      MongoScript.expects(:execute_readonly_routine).with("multiquery", anything).returns({})
+    it "normalizes the queries" do
+      MongoScript.expects(:normalize_queries).with(queries)
       MongoScript.multiquery(queries)
     end
 
-    it "normalizes the queries before validating them and passing them in for execution" do
-      normalized = stub("normalized queries")
-      MongoScript.stubs(:normalize_queries).with(queries, anything).returns(normalized)
-      MongoScript.expects(:validate_queries!).with(normalized)
-      MongoScript.expects(:execute_readonly_routine).with(anything, normalized).returns({})
+    it "validates the normalized queries" do
+      MongoScript.expects(:validate_queries!).with(normalized_queries)
+      MongoScript.multiquery(queries)
+    end
+
+    it "mongoizes the the normalized queries before execution" do
+      MongoScript.expects(:mongoize_queries).with(normalized_queries)
+      MongoScript.multiquery(queries)
+    end
+
+    it "executes the multiquery routine with the mongoized results" do
+      MongoScript.expects(:execute_readonly_routine).with("multiquery", mongoized_queries).returns({})
       MongoScript.multiquery(queries)
     end
 
     it "processes the results and returns them" do
-      raw_results = stub("raw_results")
-      MongoScript.stubs(:execute_readonly_routine).returns(raw_results)
       MongoScript.expects(:process_results).with(raw_results, normalized_queries)
       MongoScript.multiquery(queries)
     end
 
     it "processes the results and returns them" do
-      results = stub("results")
-      MongoScript.stubs(:process_results).returns(results)
-      MongoScript.multiquery(queries).should == results
+      MongoScript.stubs(:process_results).returns(processed_results)
+      MongoScript.multiquery(queries).should == processed_results
     end
   end
 
