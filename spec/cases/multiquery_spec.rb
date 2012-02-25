@@ -83,8 +83,57 @@ describe MongoScript::Multiquery do
   end
 
   describe "#normalize_queries" do
-    it "needs tests :("
+
     it "doesn't change the underlying hash"
+    context "for hashes" do
+      let(:normalized_queries) { MongoScript.normalize_queries(queries) }
+
+      context "determining collection" do
+        it "derives the collection from the name if none is provided" do
+          queries[:cars].delete(:collection)
+          # normalized_query isn't executed until we call it,
+          # so the changes to queries are respected
+          normalized_queries[:cars][:collection].to_s.should == "cars"
+        end
+
+        it "leaves the collection alone if it's provided" do
+          queries[:canines][:collection] = :dogs
+          normalized_queries[:canines][:collection].to_s.should == queries[:canines][:collection].to_s
+        end
+
+        it "checks with indifferent access" do
+          queries[:canines].delete(:collection)
+          queries[:canines]["collection"] = :dogs
+          normalized_queries[:canines][:collection].to_s.should == queries[:canines]["collection"].to_s
+        end
+      end
+
+      context "determining the class" do
+        it "uses the klass entry if it's provided" do
+          queries[:cars][:klass] = Car
+          normalized_queries[:cars][:klass].should == Car
+        end
+
+        it "derives the klass (if not provided) from the specified collection (if provided)" do
+          queries[:cars].delete(:klass)
+          queries[:cars][:collection] = :cars
+          normalized_queries[:cars][:klass].should == Car
+        end
+
+        it "derives the klass (if not provided) from the collection (derived from name)" do
+          queries[:cars].delete(:klass)
+          queries[:cars].delete(:collection)
+          normalized_queries[:cars][:klass].should == Car
+        end
+
+        it "sets klass to false if the klass can't be determined from the collection" do
+          queries[:canines].delete(:collection)
+          queries[:canines].delete(:klass)
+          Object.const_defined?("Canine").should be_false
+          normalized_queries[:canines][:klass].should be_false
+        end
+      end
+    end
   end
 
   describe "#process_results" do
