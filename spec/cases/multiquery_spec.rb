@@ -83,8 +83,14 @@ describe MongoScript::Multiquery do
   end
 
   describe "#normalize_queries" do
+    it "doesn't change the underlying hash" do
+      expect {
+        MongoScript.normalize_queries(queries)
+        # inspect will display all info inside the hash
+        # a good proxy to make sure inside values don't change
+      }.not_to change(queries, :inspect)
+    end
 
-    it "doesn't change the underlying hash"
     context "for hashes" do
       let(:normalized_queries) { MongoScript.normalize_queries(queries) }
 
@@ -132,6 +138,62 @@ describe MongoScript::Multiquery do
           Object.const_defined?("Canine").should be_false
           normalized_queries[:canines][:klass].should be_false
         end
+      end
+    end
+
+    context "for objects processable into queries" do
+      let(:sample_query) {
+        {
+          :cars => stub("Mongoid or other object"),
+          :canines => stub("another object"),
+          :hashy => {:query_type => :hash}
+        }.with_indifferent_access
+      }
+
+      before :each do
+        MongoScript.stubs(:processable_into_parameters?).returns(true)
+      end
+
+      it "sees if it's processable" do
+        MongoScript.stubs(:build_multiquery_parameters)
+        sample_query.values.each do |val|
+          unless val.is_a?(Hash)
+            MongoScript.expects(:processable_into_parameters?).with(val).returns(true)
+          else
+            MongoScript.expects(:processable_into_parameters?).with(val).never
+          end
+        end
+        MongoScript.normalize_queries(sample_query)
+      end
+
+      it "returns the processed values" do
+        # ensure that non-hash values are processed...
+        sample_query.inject({}) do |return_vals, (key, val)|
+          unless val.is_a?(Hash)
+            MongoScript.expects(:build_multiquery_parameters).with(val).returns("my stub value for #{key}")
+          end
+        end
+        # ...and returned appropriately
+        MongoScript.normalize_queries(sample_query).each do |k, v|
+          unless sample_query[k].is_a?(Hash)
+            v.should == "my stub value for #{k}"
+          end
+        end
+      end
+    end
+
+    context "for objects not processable into queries" do
+      let(:sample_query) {
+        {
+          :cars => stub("Mongoid or other object"),
+          :canines => stub("another object"),
+          :hashy => {:query_type => :hash}
+        }.with_indifferent_access
+      }
+
+      it "throws an ArgumentError" do
+        MongoScript.stubs(:processable_into_parameters?).returns(false)
+        expect { MongoScript.normalize_queries(sample_query) }.to raise_exception(ArgumentError)
       end
     end
   end

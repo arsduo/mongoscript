@@ -95,13 +95,13 @@ module MongoScript
             end
           elsif processable_into_parameters?(details)
             # process Mongo ORM selectors into JS-compatible hashes
-            details = MongoScript.build_multiquery_parameters(details).with_indifferent_access
+            details = MongoScript.build_multiquery_parameters(details)
           else
-            raise ArgumentError, "Invalid selector type provided to multiquery for #{name}, expected hash or Mongoid::Criteria, got #{critiera.class}"
+            raise ArgumentError, "Invalid selector type provided to multiquery for #{name}, expected hash or Mongoid::Criteria, got #{data.class}"
           end
 
           normalized_queries[name] = details
-          normalized_queries
+          normalized_queries.with_indifferent_access
         end
       end
 
