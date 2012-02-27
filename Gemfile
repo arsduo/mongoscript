@@ -13,6 +13,7 @@ group :development, :test do
   gem "bson_ext"
 
   # Testing infrastructure
+  gem 'rake'
   gem 'rspec'
   gem 'mocha'
   gem 'guard'
