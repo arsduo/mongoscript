@@ -18,7 +18,7 @@ describe MongoScript do
     end
 
     it "raises a NoORMError if no Mongo ORM is available" do
-      MongoScript.stubs(:const_defined?).with("Mongoid").returns(false)
+      Object.stubs(:const_defined?).with("Mongoid").returns(false)
       expect { MongoScript.orm_adapter }.to raise_exception(MongoScript::NoORMError)
     end
   end

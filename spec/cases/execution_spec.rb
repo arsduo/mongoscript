@@ -18,8 +18,8 @@ describe MongoScript::Execution do
     MongoScript::Execution::LOADED_SCRIPTS.should be_a(Hash)
   end
 
-  it "defines ScriptNotFound error < Errno::ENOENT" do
-    MongoScript::Execution::ScriptNotFound.superclass.should == Errno::ENOENT
+  it "defines ScriptNotFound error" do
+    MongoScript::Execution::ScriptNotFound.superclass.should == StandardError
   end
 
   it "defines ExecutionFailure error < RuntimeError" do
@@ -62,7 +62,7 @@ describe MongoScript::Execution do
     end
 
     it "raises a ScriptNotFound error if the file doesn't exist" do
-      File.stubs(:exist?).returns(false)
+      File.stubs(:exists?).returns(false)
       expect { ObjectWithExecution.code_for("i don't exist") }.to raise_exception(ObjectWithExecution::ScriptNotFound)
     end
 

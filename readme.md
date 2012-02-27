@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/arsduo/mongoscript.png)](http://travis-ci.org/arsduo/mongoscript)
+
 #MongoScript#
 
 An experimental library designed to make server-side Javascript execution in MongoDB easy, fun, and profitable.

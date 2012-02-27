@@ -15,7 +15,7 @@ module MongoScript
 
     LOADED_SCRIPTS = {}
 
-    class ScriptNotFound < Errno::ENOENT; end
+    class ScriptNotFound < StandardError; end
     class NoScriptDirectory < ArgumentError; end
     class ExecutionFailure < RuntimeError; end
 
@@ -79,7 +79,7 @@ module MongoScript
 
       def execute(code, args = [], options = {})
         # see http://mrdanadams.com/2011/mongodb-eval-ruby-driver/
-        result = MongoScript.database.command({:$eval => code, args: resolve_arguments(args)}.merge(options))
+        result = MongoScript.database.command({:$eval => code, :args => resolve_arguments(args)}.merge(options))
         unless result["ok"] == 1.0
           raise ExecutionFailure, "MongoScript.execute JS didn't return {ok: 1.0}!  Result: #{result.inspect}"
         end

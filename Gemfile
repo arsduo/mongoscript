@@ -9,8 +9,14 @@ end
 
 group :development, :test do
   # ORM
-  gem "mongoid", "~> 2.2"
-  gem "bson_ext"
+  gem "mongoid", "~> 2.3.0"
+  # mongo & bson 1.6 generate invalid gemspecs in rbx
+  gem "mongo", "~> 1.5.0"
+  if defined? JRUBY_VERSION
+    gem "bson"
+  else
+    gem "bson_ext", "~> 1.5.0"
+  end
 
   # Testing infrastructure
   gem 'rake'
