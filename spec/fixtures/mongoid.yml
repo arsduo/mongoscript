@@ -1,5 +1,5 @@
 mongoscript_settings: &mongoscript_settings
-  host: localhost
+  host: 127.0.0.1
   database: mongoscript_dev
 
 development:
