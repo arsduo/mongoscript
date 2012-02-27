@@ -105,7 +105,7 @@ describe MongoScript::ORM::MongoidAdapter do
     end
 
     it "returns the fields to get as :fields" do
-      ObjectWithMongoidAdapter.build_multiquery_parameters(criteria)[:fields].should == {_id: 1, _type: 1}
+      ObjectWithMongoidAdapter.build_multiquery_parameters(criteria)[:fields].should == {:_id => 1, :_type => 1}
     end
 
     it "returns all other options as :modifiers" do
