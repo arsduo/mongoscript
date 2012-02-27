@@ -1,0 +1,9 @@
+mongoscript_settings: &mongoscript_settings
+  host: localhost
+  database: mongoscript_dev
+
+development:
+  <<: *mongoscript_settings
+
+test:
+  <<: *mongoscript_settings

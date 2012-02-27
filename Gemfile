@@ -19,6 +19,10 @@ group :development, :test do
   gem 'guard-rspec'
   gem "parallel_tests"
   gem "fuubar"
+  gem "rake"
+
+  # testing bundled Javascripts
+  gem "jasmine"
 
   if RUBY_PLATFORM =~ /darwin/
     # OS X integration

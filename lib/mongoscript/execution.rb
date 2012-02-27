@@ -22,8 +22,16 @@ module MongoScript
     def self.included(base)
       base.class_eval do
         class << self
-          attr_accessor :script_dir
+          attr_accessor :script_dirs
         end
+
+        def self.gem_path
+          mongoscript = Bundler.load.specs.find {|s| s.name == "mongoscript"}
+          File.join(mongoscript.full_gem_path, "lib", "mongoscript", "javascripts")
+        end
+
+        # start out with the scripts provided by the gem
+        @script_dirs = [gem_path]
 
         extend MongoScript::Execution::ClassMethods
       end
@@ -31,12 +39,11 @@ module MongoScript
 
     module ClassMethods
       # code from stored files
-      def code_for(script_name, dir = self.script_dir)
+      def code_for(script_name)
         script_name = script_name.to_s
-        raise NoScriptDirectory, "No script_dir set for MongoScript!" unless dir
-        path = File.join(dir, "#{script_name.underscore}.js")
-        raise ScriptNotFound, "Unable to find script #{script_name}" unless File.exists?(path)
-        code = File.read(path)
+        dir = @script_dirs.find {|d| File.exists?(File.join(d, "#{script_name}.js"))}
+        raise ScriptNotFound, "Unable to find script #{script_name}" unless dir
+        code = File.read(File.join(dir, "#{script_name}.js"))
         LOADED_SCRIPTS[script_name] ||= code
 
         # for future extension

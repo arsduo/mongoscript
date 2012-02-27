@@ -1,6 +1,7 @@
 require "mongoscript/orm/mongoid_adapter"
 require "mongoscript/version"
 require "mongoscript/execution"
+require 'mongoscript/multiquery'
 
 module MongoScript
   class NoORMError < StandardError; end
@@ -23,4 +24,5 @@ module MongoScript
 
   include orm_adapter
   include Execution
+  include Multiquery
 end

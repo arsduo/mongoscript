@@ -48,6 +48,34 @@ module MongoScript
           end
           result
         end
+
+        # Turn a Mongoid::Criteria into a hash useful for multiquery.
+        #
+        # @param criteria any Mongoid::Criteria object
+        #
+        # @returns a hash containing the extracted information ready for use in multiquery
+        def build_multiquery_parameters(criteria)
+          if criteria.is_a?(Mongoid::Criteria)
+            opts = criteria.options.dup
+            # make sure the sort options are in a Mongo-compatible format
+            opts[:sort] = Mongo::Support::array_as_sort_parameters(opts[:sort] || [])
+            {
+              :selector => criteria.selector,
+              :collection => criteria.collection.name,
+              # used for rehydration
+              :klass => criteria.klass,
+              # fields are specified as a second parameter to the db[collection].find JS call
+              :fields => opts[:fields],
+              # everything in the options besides fields should be a modifier
+              # i.e. a function that can be applied via a method to a db[collection].find query
+              :modifiers => opts.tap { |o| o.delete(:fields) }
+            }
+          end
+        end
+
+        def processable_into_parameters?(object)
+          object.is_a?(Mongoid::Criteria)
+        end
       end
     end
   end
