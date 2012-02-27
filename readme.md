@@ -8,12 +8,15 @@ This library isn't "experimental" only in the sense that I'm trying out new code
 
 > Note also that [Javascript] eval doesn't work with sharding. If you expect your system to later be sharded, it's probably best to avoid eval altogether.
 
-If you're building a small-to-medium-sized system that you know will never grow huge, you'll be able to use MongoScript to very cool effect.  I wouldn't recommend it for any kind of "we're gonna scale it  to the moon!" kind of product, though.  Disentangling Javascript functions and reimplementing them in Ruby so you can shard your growing database doesn't sound like my kind of fun.
+If you're building a small-to-medium-sized system that you know will never grow huge, you may be able to use MongoScript to very cool effect.  I wouldn't recommend it for any kind of "we're gonna scale it  to the moon!" kind of product, though.  Disentangling Javascript functions and reimplementing them in Ruby so you can shard your growing database doesn't sound like my kind of fun.
 
-What's that you say?  You understand all that, you just want to hack some server-side code for the fun of it?  Happy to oblige!
+###Performance###
+
+There's also no guarantee that using Javascript to perform semi-complex queries is actually worth it -- Javascript can be significantly slower.  I'll post some performance statistics soon.
 
 ###The cool stuff###
 
-##More readme coming soon!##
+You understand all that, you just want to hack some server-side code for the fun of it?  Let's get to it!
 
-So what we can do with MongoDB and Javascript, at least in theory? A lot.
+
+####More readme coming soon!####
