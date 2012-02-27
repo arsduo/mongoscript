@@ -144,7 +144,7 @@ module MongoScript
         mongoized_queries = queries.dup
         mongoized_queries.each_pair do |name, details|
           # have to dup the query details to avoid changing the original hashes
-          mongoized_queries[name] = details.dup.delete(:klass)
+          mongoized_queries[name] = details.dup.tap {|t| t.delete(:klass) }
         end
       end
 

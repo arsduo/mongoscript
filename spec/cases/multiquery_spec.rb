@@ -25,6 +25,10 @@ describe MongoScript::Multiquery do
     MongoScript.normalize_queries(queries)
   }
 
+  let(:mongoized_queries) {
+    MongoScript.mongoize_queries(normalized_queries)
+  }
+
   it "defines QueryFailedError error < RuntimeError" do
     MongoScript::Multiquery::QueryFailedError.superclass.should == RuntimeError
   end
@@ -195,6 +199,43 @@ describe MongoScript::Multiquery do
         MongoScript.stubs(:processable_into_parameters?).returns(false)
         expect { MongoScript.normalize_queries(sample_query) }.to raise_exception(ArgumentError)
       end
+    end
+  end
+
+  describe "#validate_queries!" do
+    it "throws an error if any of the queries are missing a collection" do
+      normalized_queries.first.tap {|k, v| v.delete(:collection) }
+      expect { MongoScript.validate_queries!(normalized_queries) }.to raise_exception(ArgumentError)
+    end
+
+    it "throws an error if any of the queries are missing a klass" do
+      normalized_queries.first.tap {|k, v| v.delete(:klass) }
+      expect { MongoScript.validate_queries!(normalized_queries) }.to raise_exception(ArgumentError)
+    end
+
+    it "has detailed error descriptions"
+  end
+
+  describe "#mongoize_queries" do
+    it "returns copy of queries without the klass value" do
+      mongoized_queries.each_pair do |k, v|
+        v[:klass].should be_nil
+      end
+    end
+
+    it "leaves all other values the same" do
+      mongoized_queries.each_pair do |k, v|
+        # avoid symbol/string differences by using JSON
+        MultiJson.encode(v).should == MultiJson.encode(normalized_queries[k].tap {|h| h.delete(:klass) })
+      end
+    end
+
+    it "doesn't change the underlying hash" do
+      expect {
+        MongoScript.mongoize_queries(queries)
+        # inspect will display all info inside the hash
+        # a good proxy to make sure inside values don't change
+      }.not_to change(queries, :inspect)
     end
   end
 
