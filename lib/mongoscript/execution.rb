@@ -4,6 +4,7 @@ module MongoScript
   # Execute code on the Mongo server.
 
   module Execution
+    extend ActiveSupport::Concern
 
     LOADED_SCRIPTS = {}
 
@@ -11,24 +12,16 @@ module MongoScript
     class NoScriptDirectory < ArgumentError; end
     class ExecutionFailure < RuntimeError; end
 
-    def self.included(base)
-      base.class_eval do
-        class << self
-          attr_accessor :script_dirs
-        end
-
-        def self.gem_path
-          mongoscript = Bundler.load.specs.find {|s| s.name == "mongoscript"}
-          File.join(mongoscript.full_gem_path, "lib", "mongoscript", "javascripts")
-        end
-
-        # start out with the scripts provided by the gem
-        @script_dirs = [gem_path]
-
-        extend MongoScript::Execution
+    included do
+      class << self
+        attr_accessor :script_dirs
       end
+
+      # start out with the scripts provided by the gem
+      @script_dirs = [gem_path]
     end
 
+    module ClassMethods
       # Get code from stored files.
       # This looks through each of the script directories, returning the first match it finds.
       #
@@ -94,6 +87,13 @@ module MongoScript
           raise ExecutionFailure, "MongoScript.execute JS didn't return {ok: 1.0}!  Result: #{result.inspect}"
         end
         result["retval"]
+      end
+
+      protected
+
+      def gem_path
+        mongoscript = Bundler.load.specs.find {|s| s.name == "mongoscript"}
+        File.join(mongoscript.full_gem_path, "lib", "mongoscript", "javascripts")
       end
     end
   end
