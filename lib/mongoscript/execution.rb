@@ -1,15 +1,7 @@
 require 'digest/md5'
 
 module MongoScript
-  # Execute raw code on the Mongo server
-  # code_for can
-  # longer term, we could store functions on the server
-  # and have deploy tasks that delete all and reinstall stored method on deploys
-  # see http://neovintage.blogspot.com/2010/07/mongodb-stored-javascript-functions.html
-  # 10gen recommends not using stored functions, but that's mainly b/c
-  # they should be stored and versioned with other code
-  # but a cool 6W gem for automatically clearing and installing such code would meet that objection
-  # see http://www.mongodb.org/display/DOCS/Server-side+Code+Execution#Server-sideCodeExecution-Storingfunctionsserverside
+  # Execute code on the Mongo server.
 
   module Execution
 
@@ -33,12 +25,30 @@ module MongoScript
         # start out with the scripts provided by the gem
         @script_dirs = [gem_path]
 
-        extend MongoScript::Execution::ClassMethods
+        extend MongoScript::Execution
       end
     end
 
-    module ClassMethods
-      # code from stored files
+      # Get code from stored files.
+      # This looks through each of the script directories, returning the first match it finds.
+      #
+      # Longer term, we could store functions on the server
+      # keyed by both name and a hash of the contents (to ensure uniqueness).
+      #
+      # @see http://neovintage.blogspot.com/2010/07/mongodb-stored-javascript-functions.html.
+      # @see http://www.mongodb.org/display/DOCS/Server-side+Code+Execution#Server-sideCodeExecution-Storingfunctionsserverside
+      #
+      # @note 10gen recommends not using stored functions, but that's mainly because
+      #       they should be stored and versioned with other code.
+      #       However, automatic installation and versioning via MD5 hashes should meet that objection.
+      #
+      # @param script_name the name of the script file (without .js)
+      #
+      # @note this is currently cached in LOADED_SCRIPTS without hashing. (To do!)
+      #
+      # @raises ScriptNotFound if a file with the provided basename doesn't exist in any provided directory.
+      #
+      # @returns the script contents
       def code_for(script_name)
         script_name = script_name.to_s
         dir = @script_dirs.find {|d| File.exists?(File.join(d, "#{script_name}.js"))}

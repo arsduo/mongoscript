@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["alex+git@alexkoppel.com"]
   gem.description   = %q{An experimental Ruby library for running serverside Javascript in MongoDB.}
   gem.summary       = %q{An experimental Ruby library for running serverside Javascript in MongoDB.}
-  gem.homepage      = ""
+  gem.homepage      = "http://github.com/arsduo/mongoscript"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
