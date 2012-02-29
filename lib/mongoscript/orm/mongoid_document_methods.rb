@@ -1,3 +1,4 @@
+# @private
 # TBD: do we need this?
 module MongoidDocumentMethods
   module ClassMethods

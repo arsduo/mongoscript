@@ -1,18 +1,21 @@
 module MongoScript
   module ORM
     module MongoidAdapter
-
-      def self.included(base)
-        base.class_eval do
-          extend MongoScript::ORM::MongoidAdapter::ClassMethods
-        end
-      end
+      extend ActiveSupport::Concern
 
       module ClassMethods
+        # The MongoDB database.
         def database
           Mongoid::Config.database
         end
 
+        # Turn a raw hash returned by the MongoDB driver into a regular Ruby object.
+        # For this adapter, it a Mongoid document.
+        #
+        # @param klass an ORM class that can instantiate objects from data
+        # @param data raw data returned from the database
+        #
+        # @returns a Ruby object
         def rehydrate(klass, data)
           Mongoid::Factory.from_db(klass, data)
         end
@@ -73,6 +76,11 @@ module MongoScript
           end
         end
 
+        # Answers whether a given non-hash object can be turned into a hash
+        # suitable for database queries.
+        # Currently, it checks if the object is a Mongoid::Criteria.
+        #
+        # @param object the object to test
         def processable_into_parameters?(object)
           object.is_a?(Mongoid::Criteria)
         end

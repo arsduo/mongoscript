@@ -1,6 +1,9 @@
 module MongoScript
   module Multiquery
+    extend ActiveSupport::Concern
 
+    # An error class representing Mongo queries that for some reason failed in the Javascript.
+    # This error will never be raised; instead it will be returned as an object in the results array.
     class QueryFailedError < RuntimeError
       # The original query whose execution failed.
       attr_accessor :query_parameters
@@ -9,6 +12,7 @@ module MongoScript
       # The response from the multiquery Javascript.
       attr_accessor :db_response
 
+      # Initialize the error, and set its backtrace.
       def initialize(name, query, response)
         @query_name = name
         @query_parameters = query
@@ -19,15 +23,7 @@ module MongoScript
       end
     end
 
-    # @private
-    def self.included(base)
-      base.class_eval do
-        extend MongoScript::Multiquery::ClassMethods
-      end
-    end
-
     module ClassMethods
-
       # Runs multiple find queries at once,
       # returning the results keyed to the original query names.
       # If a query produces an error, its result will be a QueryFailedError object

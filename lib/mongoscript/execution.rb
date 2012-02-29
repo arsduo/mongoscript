@@ -59,10 +59,30 @@ module MongoScript
         # code
       end
 
+      # Execute read-only code stored in a file.
+      # The code will be run non-blockingly;
+      # it should not contain any statements that write to the database.
+      #
+      # @note The name of this function may change before 1.0.
+      #
+      # @param script_name the name of the script file (see #code_for)
+      # @param args any arguments to the function
+      #
+      # @returns the result of the Mongo call
       def execute_readonly_routine(script_name, *args)
         execute_readonly_code(code_for(script_name), *args)
       end
 
+      # Execute code stored in a file that can write to the database.
+      #
+      # @note This call will block MongoDB, so use this method sparingly.
+      #
+      # @note (see #execute_readonly_routine)
+      #
+      # @param script_name the name of the script file (see #code_for)
+      # @param args any arguments to the function
+      #
+      # @returns (see #execute_readonly_routine)
       def execute_readwrite_routine(script_name, *args)
         execute_readwrite_code(code_for(script_name), *args)
       end
