@@ -56,6 +56,10 @@ describe MongoScript::Execution do
       ObjectWithExecution.code_for(:sample_script).should == @script_code
     end
 
+    it "underscores the filename (since JS function names will be passed in too)" do
+      ObjectWithExecution.code_for("sampleScript").should == @script_code
+    end
+
     it "stores the value in LOADED_SCRIPTS" do
       ObjectWithExecution.code_for(:sample_script)
       ObjectWithExecution::LOADED_SCRIPTS["sample_script"].should == @script_code

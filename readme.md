@@ -56,4 +56,4 @@ A more detailed readme, with usage instructions and so on.
 
 ###Note on Dependencies###
 
-Since this is currently experimental/for fun, I'm relying on ActiveSupport for HashWithIndifferentAccess and Concern.  I acknowledge this restricts the gem to projects where ActiveSupport is an option, but should be easy enough to rip out if someone wants to use this seriously.
+Since this is currently experimental/for fun, I'm relying on ActiveSupport for HashWithIndifferentAccess and Concern.  I acknowledge this restricts the gem to projects where ActiveSupport is an option, but should be easy enough to rip out if someone wants to use this seriously.  (The hardest part would be removing underscore, used in execution.rb.)

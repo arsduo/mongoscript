@@ -43,7 +43,8 @@ module MongoScript
       #
       # @returns the script contents
       def code_for(script_name)
-        script_name = script_name.to_s
+        script_name = script_name.to_s.underscore
+        # we can use underscore since we use ActiveSupport
         dir = @script_dirs.find {|d| File.exists?(File.join(d, "#{script_name}.js"))}
         raise ScriptNotFound, "Unable to find script #{script_name}" unless dir
         code = File.read(File.join(dir, "#{script_name}.js"))
